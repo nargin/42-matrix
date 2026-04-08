@@ -1,43 +1,6 @@
 const std = @import("std");
 const print = std.debug.print;
-
-pub fn Vector(comptime size: usize, comptime T: type) type {
-    return struct {
-        data: [size]T,
-
-        const Self = @This();
-
-        pub fn add(self: *Self, other: Self) void {
-            for (0..size) |i| {
-                self.data[i] += other.data[i];
-            }
-        }
-
-        pub fn sub(self: *Self, other: Self) void {
-            for (0..size) |i| {
-                self.data[i] -= other.data[i];
-            }
-        }
-
-        pub fn scl(self: *Self, scale: T) void {
-            for (0..size) |i| {
-                self.data[i] *= scale;
-            }
-        }
-
-        pub fn dot(self: *const Self, other: Self) T {
-            var acc: T = 0;
-            for (0..size) |i| {
-                if (@typeInfo(T) == .float) {
-                    acc = @mulAdd(T, self.data[i], other.data[i], acc);
-                } else {
-                    acc += self.data[i] * other.data[i];
-                }
-            }
-            return acc;
-        }
-    };
-}
+pub const Vector = @import("types.zig").Vector;
 
 pub fn main() void {
     const e1 = Vector(3, f32){ .data = .{ 0.0, 0.0, 0.0 } };

@@ -1,37 +1,8 @@
+// src: https://builtin.com/data-science/vector-norms#:~:text=A%20vector%20norm%20is%20a,important%20concept%20to%20machine%20learning.
+
 const std = @import("std");
 const print = std.debug.print;
-
-pub fn Vector(comptime size: usize, comptime T: type) type {
-    return struct {
-        data: [size]T,
-
-        const Self = @This();
-
-        fn norm_1(self: Self) T {
-            var acc: T = 0;
-            for (0..size) |i| {
-                acc += @abs(self.data[i]);
-            }
-            return acc;
-        }
-
-        fn norm(self: Self) T {
-            var acc: T = 0.0;
-            for (0..size) |i| {
-                acc += std.math.pow(T, self.data[i], 2);
-            }
-            return @sqrt(acc);
-        }
-
-        fn norm_inf(self: Self) T {
-            var max: T = 0;
-            for (0..size) |i| {
-                max = @max(max, @abs(self.data[i]));
-            }
-            return max;
-        }
-    };
-}
+pub const Vector = @import("types.zig").Vector;
 
 pub fn main() void {
     const e1 = Vector(3, f32){ .data = .{ 1.0, 2.0, 3.0 } };

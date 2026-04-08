@@ -1,62 +1,7 @@
 const std = @import("std");
-
-pub fn Vector(comptime size: usize, comptime T: type) type {
-    return struct {
-        data: [size]T,
-
-        const Self = @This();
-
-        pub fn add(self: *Self, other: Self) void {
-            for (0..size) |i| {
-                self.data[i] += other.data[i];
-            }
-        }
-
-        pub fn sub(self: *Self, other: Self) void {
-            for (0..size) |i| {
-                self.data[i] -= other.data[i];
-            }
-        }
-
-        pub fn scl(self: *Self, scale: T) void {
-            for (0..size) |i| {
-                self.data[i] *= scale;
-            }
-        }
-    };
-}
-
-pub fn Matrix(comptime rows: usize, comptime cols: usize, comptime T: type) type {
-    return struct {
-        data: [rows][cols]T,
-
-        const Self = @This();
-
-        pub fn add(self: *Self, other: Self) void {
-            for (0..rows) |i| {
-                for (0..cols) |j| {
-                    self.data[i][j] += other.data[i][j];
-                }
-            }
-        }
-
-        pub fn sub(self: *Self, other: Self) void {
-            for (0..rows) |i| {
-                for (0..cols) |j| {
-                    self.data[i][j] -= other.data[i][j];
-                }
-            }
-        }
-
-        pub fn scl(self: *Self, scale: T) void {
-            for (0..rows) |i| {
-                for (0..cols) |j| {
-                    self.data[i][j] *= scale;
-                }
-            }
-        }
-    };
-}
+const Utils = @import("types.zig");
+pub const Vector = Utils.Vector;
+pub const Matrix = Utils.Matrix;
 
 pub fn main() void {
     var u = Vector(2, f32){ .data = .{ 2.0, 3.0 } };

@@ -1,6 +1,6 @@
 const std = @import("std");
-const Vector = @import("00_op.zig").Vector;
-const Matrix = @import("00_op.zig").Matrix;
+const Vector = @import("types.zig").Vector;
+const Matrix = @import("types.zig").Matrix;
 
 // lerp(u, v, t) = u + t * (v - u)
 // Works on f32 scalars, Vectors, and Matrices.

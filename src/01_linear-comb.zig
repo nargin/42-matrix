@@ -1,6 +1,6 @@
 const std = @import("std");
 const print = std.debug.print;
-const Vector = @import("00_op.zig").Vector;
+const Vector = @import("types.zig").Vector;
 
 pub fn linear_combination(comptime size: usize, comptime T: type, u: []const Vector(size, T), coefs: []const T) Vector(size, T) {
     if (u.len != coefs.len) {
