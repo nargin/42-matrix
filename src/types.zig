@@ -50,7 +50,7 @@ pub fn Vector(comptime size: usize, comptime T: type) type {
         pub fn norm(self: Self) T {
             var acc: T = 0;
             for (0..size) |i| {
-                acc += std.math.pow(T, self.data[i], 2);
+                acc = @mulAdd(T, self.data[i], self.data[i], acc);
             }
             return @sqrt(acc);
         }
@@ -123,16 +123,17 @@ pub fn Matrix(comptime rows: usize, comptime cols: usize, comptime T: type) type
             return result;
         }
 
-        // ex08 - trace == diagonale
+        // ex08 - trace
         pub fn trace(self: Self) T {
+            if (rows != cols) @compileError("trace requires a square matrix");
             var acc: T = 0;
-            for (0..@min(rows, cols)) |i| {
+            for (0..rows) |i| {
                 acc += self.data[i][i];
             }
             return acc;
         }
 
-        // ex09 - transpose rotation main diagonale
+        // ex09 - transpose
         pub fn transpose(self: Self) Matrix(cols, rows, T) {
             var a: Matrix(cols, rows, T) = undefined;
             for (0..rows) |i| {
@@ -140,10 +141,120 @@ pub fn Matrix(comptime rows: usize, comptime cols: usize, comptime T: type) type
                     a.data[j][i] = self.data[i][j];
                 }
             }
-
             return a;
         }
 
-        pub fn row_echelon(self: Self) Matrix(rows, cols, T) {}
+        // ex10 - row echelon (RREF)
+        pub fn row_echelon(self: Self) Matrix(rows, cols, T) {
+            var result: Matrix(rows, cols, T) = self;
+            var pivot_row: usize = 0;
+
+            for (0..cols) |col| {
+                var found: ?usize = null;
+                for (pivot_row..rows) |r| {
+                    if (result.data[r][col] != 0) {
+                        found = r;
+                        break;
+                    }
+                }
+                const pr = found orelse continue;
+
+                if (pr != pivot_row)
+                    std.mem.swap([cols]T, &result.data[pr], &result.data[pivot_row]);
+
+                const pivot_val = result.data[pivot_row][col];
+                for (0..cols) |c|
+                    result.data[pivot_row][c] /= pivot_val;
+
+                for (0..rows) |r| {
+                    if (r == pivot_row) continue;
+                    const factor = result.data[r][col];
+                    for (0..cols) |c|
+                        result.data[r][c] = @mulAdd(T, -factor, result.data[pivot_row][c], result.data[r][c]);
+                }
+
+                pivot_row += 1;
+                if (pivot_row >= rows) break;
+            }
+
+            return result;
+        }
+
+        // ex11 - determinant
+        fn minor(self: Self, comptime skip_row: usize, comptime skip_col: usize) Matrix(rows - 1, cols - 1, T) {
+            var result: Matrix(rows - 1, cols - 1, T) = undefined;
+            var ri: usize = 0;
+            inline for (0..rows) |r| {
+                if (r != skip_row) {
+                    var ci: usize = 0;
+                    inline for (0..cols) |c| {
+                        if (c != skip_col) {
+                            result.data[ri][ci] = self.data[r][c];
+                            ci += 1;
+                        }
+                    }
+                    ri += 1;
+                }
+            }
+            return result;
+        }
+
+        pub fn determinant(self: Self) T {
+            if (rows != cols) @compileError("determinant requires a square matrix");
+            if (rows > 4) @compileError("determinant only supported up to 4x4");
+
+            if (rows == 1) return self.data[0][0];
+
+            if (rows == 2)
+                return @mulAdd(T, self.data[0][0], self.data[1][1], -(self.data[0][1] * self.data[1][0]));
+
+            var result: T = 0;
+            inline for (0..rows) |j| {
+                const sign: T = if (j & 1 == 0) 1 else -1;
+                const cofactor = sign * self.minor(0, j).determinant();
+                result = @mulAdd(T, self.data[0][j], cofactor, result);
+            }
+            return result;
+        }
+
+        // ex12 - inverse
+        pub fn inverse(self: Self) !Matrix(rows, cols, T) {
+            if (rows != cols) @compileError("inverse requires a square matrix");
+            if (self.determinant() == 0) return error.SingularMatrix;
+
+            var aug: Matrix(rows, 2 * cols, T) = undefined;
+            for (0..rows) |i| {
+                for (0..cols) |j| {
+                    aug.data[i][j] = self.data[i][j];
+                    aug.data[i][cols + j] = if (i == j) 1 else 0;
+                }
+            }
+
+            const reduced = aug.row_echelon();
+
+            var result: Matrix(rows, cols, T) = undefined;
+            for (0..rows) |i| {
+                for (0..cols) |j| {
+                    result.data[i][j] = reduced.data[i][cols + j];
+                }
+            }
+
+            return result;
+        }
+
+        // ex13 - rank
+        pub fn rank(self: Self) usize {
+            const rref = self.row_echelon();
+            var r: usize = 0;
+            for (0..rows) |i| {
+                for (0..cols) |j| {
+                    if (rref.data[i][j] != 0) {
+                        r += 1;
+                        break;
+                    }
+                }
+            }
+            return r;
+        }
     };
 }
